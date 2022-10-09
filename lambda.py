@@ -66,7 +66,78 @@ class GetEntryIntentHandler(AbstractRequestHandler):
                 .ask("Would you like to do anything else?")
                 .response
         )
-    
+
+class ChangeServiceIntentHandler(AbstractRequestHandler):
+    """Handler for Change Service Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("ChangeServiceIntent")(handler_input)
+        
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        goToVault = ask_utils.request_util.get_slot_value(handler_input, "vaultName")
+        getOldService = ask_utils.request_util.get_slot_value(handler_input, "originalService")
+        getNewService = ask_utils.request_util.get_slot_value(handler_input, "service")
+        
+        changeService = ("UPDATE " + goToVault + " SET SERVICE=%s WHERE SERVICE=%s")
+        cursor.execute(changeService, (getNewService,getOldService))
+        
+        speak_output = "The service " + getOldService + " has been updated to " + getNewService + "."
+        
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask("Would you like to do anything else?")
+                .response
+        )
+
+class ChangeUsernameIntentHandler(AbstractRequestHandler):
+    """Handler for Change Username Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("ChangeUsernameIntent")(handler_input)
+        
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        goToVault = ask_utils.request_util.get_slot_value(handler_input, "vaultName")
+        getService = ask_utils.request_util.get_slot_value(handler_input, "service")
+        getNewUsername = ask_utils.request_util.get_slot_value(handler_input, "username")
+        
+        changeUsername = ("UPDATE " + goToVault + " SET USERNAME=%s WHERE SERVICE=%s")
+        cursor.execute(changeUsername, (getNewUsername,getService))
+        
+        speak_output = "The username for " + getService + " has been updated to " + getNewUsername + "."
+        
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask("Would you like to do anything else?")
+                .response
+        )
+
+class ChangePasswordIntentHandler(AbstractRequestHandler):
+    """Handler for Change Password Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("ChangePasswordIntent")(handler_input)
+        
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        goToVault = ask_utils.request_util.get_slot_value(handler_input, "vaultName")
+        getService = ask_utils.request_util.get_slot_value(handler_input, "service")
+        getNewPassword = ask_utils.request_util.get_slot_value(handler_input, "password")
+        
+        changePass = ("UPDATE " + goToVault + " SET PASSWORD=%s WHERE SERVICE=%s")
+        cursor.execute(changePass, (getNewPassword,getService))
+        
+        speak_output = "The password for " + getService + " has been updated to " + getNewPassword + "."
+        
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask("Would you like to do anything else?")
+                .response
+        )
     
 class CreateVaultIntentHandler(AbstractRequestHandler):
     """Handler for Create Vault Intent."""
@@ -103,7 +174,7 @@ class AddEntryIntentHandler(AbstractRequestHandler):
         insertSQL = "INSERT INTO " + vault + " (SERVICE, USERNAME, PASSWORD) VALUES (%s, %s, %s)"
         cursor.execute(insertSQL, (service,username,password))
         db.commit()
-        speak_output = "Uhh, lets go!"
+        speak_output = "The entry has been added."
 
         return (
             handler_input.response_builder
@@ -128,7 +199,7 @@ class RemoveEntryIntentHandler(AbstractRequestHandler):
         deleteSQL = "DELETE FROM " + vault + " WHERE SERVICE=%s AND USERNAME=%s AND PASSWORD=%s"
         cursor.execute(deleteSQL, (service,username,password))
         db.commit()
-        speak_output = "Annndd drop!"
+        speak_output = "The entry with, service as " + service + ", username as " + username + ", and password as " + password + " has been removed."
 
         return (
             handler_input.response_builder
@@ -253,6 +324,9 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 sb = SkillBuilder()
 
 sb.add_request_handler(GetEntryIntentHandler())
+sb.add_request_handler(ChangeServiceIntentHandler())
+sb.add_request_handler(ChangeUsernameIntentHandler())
+sb.add_request_handler(ChangePasswordIntentHandler())
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(CreateVaultIntentHandler())
 sb.add_request_handler(AddEntryIntentHandler())
