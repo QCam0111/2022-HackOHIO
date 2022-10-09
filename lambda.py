@@ -56,6 +56,31 @@ class CreateVaultIntentHandler(AbstractRequestHandler):
         return (
             handler_input.response_builder
                 .speak(speak_output)
+                .ask("Would you like to do anything else?")
+                .response
+        )
+
+class AddEntryIntentHandler(AbstractRequestHandler):
+    """Handler for Add Entry Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("AddEntryIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        vault = ask_utils.request_util.get_slot_value(handler_input, "vaultName")
+        service = ask_utils.request_util.get_slot_value(handler_input, "service")
+        username = ask_utils.request_util.get_slot_value(handler_input, "username")
+        password = ask_utils.request_util.get_slot_value(handler_input, "password")
+        
+        insertSQL = "INSERT INTO " + vault + " (SERVICE, USERNAME, PASSWORD) VALUES (%s, %s, %s)"
+        cursor.execute(insertSQL, (service,username,password))
+        db.commit()
+        speak_output = "Uhh, lets go!"
+
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
                 # .ask("add a reprompt if you want to keep the session open for the user to respond")
                 .response
         )
@@ -178,6 +203,7 @@ sb = SkillBuilder()
 
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(CreateVaultIntentHandler())
+sb.add_request_handler(AddEntryIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
